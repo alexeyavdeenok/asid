@@ -1,55 +1,94 @@
-import sys
+from linked_list import *
 import pygame
-from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QFileDialog, QVBoxLayout, QLabel
 
 
-class MusicPlayer(QWidget):
-    def __init__(self):
+class Composition:
+    """Класс, представляющий музыкальную композицию"""
+    def __init__(self, title, path):
+        self.title = title
+        self.path = path
+
+    def __repr__(self):
+        return f"Composition(title='{self.title}', path='{self.path}')"
+
+    def __str__(self):
+        return self.title
+
+
+class PlayList(LinkedList):
+    """Класс, представляющий плейлист"""
+    def __init__(self, name):
         super().__init__()
+        self.name = name
+        self._current = None
+        self.is_paused = False
+        pygame.mixer.init()  # Инициализация микшера Pygame
 
-        # Инициализация Pygame для воспроизведения музыки
-        pygame.mixer.init()
+    def __str__(self):
+        return self.name
 
-        self.initUI()
+    def play_all(self, item):
+        """Начать проигрывать все треки, начиная с item."""
+        self._current = item
 
-    def initUI(self):
-        # Установка интерфейса
-        self.setWindowTitle('MP3 Music Player')
-        self.setGeometry(100, 100, 300, 200)
+        if self._current is None:
+            raise ValueError("Нет доступных треков для проигрывания.")
 
-        # Создаем кнопку для выбора файла
-        self.button = QPushButton('Выбрать MP3 файл', self)
-        self.button.clicked.connect(self.open_file_dialog)
+        print(f"Начинаем проигрывать плейлист '{self.name}' с трека: {self._current.data}")
+        self._play_track(self._current)
 
-        # Метка для отображения выбранного файла
-        self.label = QLabel('Выбранный файл: None', self)
+    def _play_track(self, track_item):
+        """Вспомогательный метод для проигрывания трека."""
+        if self.is_paused:
+            pygame.mixer.music.unpause()
+            self.is_paused = False
+            return
 
-        # Упаковка элементов в вертикальный layout
-        layout = QVBoxLayout()
-        layout.addWidget(self.button)
-        layout.addWidget(self.label)
-
-        self.setLayout(layout)
-
-    def open_file_dialog(self):
-        # Открытие диалога выбора файла
-        options = QFileDialog.Options()
-        file_path, _ = QFileDialog.getOpenFileName(self, "Выберите MP3 файл", "", "MP3 Files (*.mp3);;All Files (*)",
-                                                   options=options)
-
-        if file_path:
-            self.label.setText(f'Выбранный файл: {file_path}')  # Отображаем выбранный файл
-            self.play_music(file_path)  # Проигрывание выбранного файла
-
-    def play_music(self, file_path):
-        # Проигрывание музыки
-        pygame.mixer.music.load(file_path)
+        track = track_item.data
+        pygame.mixer.music.load(track.path)
         pygame.mixer.music.play()
-        print(f'Играет: {file_path}')
+
+        while pygame.mixer.music.get_busy():
+            if not pygame.mixer.music.get_busy():
+                break
+
+        self.next_track()
+
+    def next_track(self):
+        """Перейти к следующему треку."""
+        if not self._current:
+            raise ValueError("Нет текущего трека.")
+        self._current = self._current.next_item
+        print(f"Сейчас проигрывается трек: {self._current.data}")
+        self._play_track(self._current)
+
+    def previous_track(self):
+        """Перейти к предыдущему треку."""
+        if not self._current:
+            raise ValueError("Нет текущего трека.")
+        self._current = self._current.previous_item
+        print(f"Сейчас проигрывается трек: {self._current.data}")
+        self._play_track(self._current)
+
+    def stop(self):
+        """Остановить текущее воспроизведение."""
+        pygame.mixer.music.stop()
+        print("Воспроизведение остановлено.")
+
+    def pause(self):
+        """Поставить воспроизведение на паузу."""
+        pygame.mixer.music.pause()
+        self.is_paused = True
+        print("Воспроизведение поставлено на паузу.")
+
+    @property
+    def current(self):
+        """Получить текущий трек."""
+        if self._current is None:
+            raise ValueError("Нет текущего трека.")
+        return self._current.data
+
+    def __repr__(self):
+        return f"PlayList(name='{self.name}', tracks=[{', '.join(str(node.data) for node in self)})])"
 
 
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    player = MusicPlayer()
-    player.show()
-    sys.exit(app.exec_())
