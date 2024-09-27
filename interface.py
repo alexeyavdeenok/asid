@@ -103,10 +103,10 @@ class Ui_MainWindow(object):
         self.label_3 = QtWidgets.QLabel(self.tab_4)
         self.label_3.setGeometry(QtCore.QRect(160, 60, 311, 51))
         self.label_3.setObjectName("label_3")
-        self.horizontalSlider = QtWidgets.QSlider(self.tab_4)
-        self.horizontalSlider.setGeometry(QtCore.QRect(170, 130, 301, 41))
-        self.horizontalSlider.setOrientation(QtCore.Qt.Horizontal)
-        self.horizontalSlider.setObjectName("horizontalSlider")
+        # self.horizontalSlider = QtWidgets.QSlider(self.tab_4)
+        # self.horizontalSlider.setGeometry(QtCore.QRect(170, 130, 301, 41))
+        # self.horizontalSlider.setOrientation(QtCore.Qt.Horizontal)
+        # self.horizontalSlider.setObjectName("horizontalSlider")
         self.horizontalLayoutWidget = QtWidgets.QWidget(self.tab_4)
         self.horizontalLayoutWidget.setGeometry(QtCore.QRect(80, 220, 540, 80))
         self.horizontalLayoutWidget.setObjectName("horizontalLayoutWidget")
@@ -158,6 +158,9 @@ class Ui_MainWindow(object):
 
         #4 окно
         self.pushButton_14.clicked.connect(self.play_pause)
+        self.pushButton_12.clicked.connect(self.play_next_track)
+        self.pushButton_13.clicked.connect(self.play_previous_track)
+        self.pushButton_15.clicked.connect(self.to_choice_music)
 
     def show_error_message(self, text_mt):
         # Создаём всплывающее окно с сообщением об ошибке
@@ -273,10 +276,10 @@ class Ui_MainWindow(object):
         self.tabWidget.setCurrentIndex(0)
 
     def remove_playlist(self):
-        selected_item = self.listWidget.currentItem().text()
+        selected_item = self.listWidget.currentItem()
         if selected_item:
             for i in self.list_of_playlists:
-                if selected_item == i.name:
+                if selected_item.text() == i.name:
                     self.list_of_playlists.remove(i)
                     break
             self.listWidget.clear()
@@ -308,8 +311,10 @@ class Ui_MainWindow(object):
         if selected_item:
             for i in self.current_playlist:
                 if selected_item.text()[selected_item.text().index(' ') + 1:] == str(i.data):
-                    self.choiced_track = i
+                    #self.choiced_track = i
+                    self.current_playlist._current = i
                     self.tabWidget.setCurrentIndex(3)
+                    self.label_3.setText(f'Текущий трек: {str(self.current_playlist._current.data)}')
                     break
 
         else:
@@ -317,17 +322,22 @@ class Ui_MainWindow(object):
 
     def play_pause(self):
         """Toggle between play and pause for the current track."""
-        if self.choiced_track is None:
-            self.show_error_message("Сначала выберите трек для воспроизведения.")
-            return
-        if not pygame.mixer.get_busy():
-            self.current_playlist.play_all(self.choiced_track)
+        self.current_playlist.play_all()
 
-        if self.current_playlist.is_paused:
-            self.current_playlist.play_all(self.current_playlist._current)  # Continue playing
-        else:
-            pygame.mixer.music.pause()  # Pause the music
-            self.current_playlist.is_paused = True
+    def play_next_track(self):
+        self.current_playlist.next_track()
+        self.label_3.setText(f'Текущий трек: {str(self.current_playlist.current)}')
+
+    def play_previous_track(self):
+        self.current_playlist.previous_track()
+        self.label_3.setText(f'Текущий трек: {str(self.current_playlist.current)}')
+
+    def to_choice_music(self):
+        self.current_playlist.stop()
+        self.label_3.clear()
+        self.tabWidget.setCurrentIndex(2)
+
+    def add_music(self):
 
 
     def retranslateUi(self, MainWindow):
