@@ -134,7 +134,6 @@ class Ui_MainWindow(object):
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
 
-
         self.retranslateUi(MainWindow)
         self.tabWidget.setCurrentIndex(3)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -143,12 +142,22 @@ class Ui_MainWindow(object):
         self.list_of_playlists = []
         self.listWidget.addItems(self.list_of_playlists)
         self.current_playlist = None
-        #1 окно
+        self.choiced_track = None
+        # 1 окно
         self.pushButton.clicked.connect(self.create_playlist)
+        self.pushButton_3.clicked.connect(self.remove_playlist)
+        self.pushButton_2.clicked.connect(self.to_playlist)
 
-        #2 окно
+        # 2 окно
         self.pushButton_10.clicked.connect(self.set_listwidget3_value)
         self.pushButton_11.clicked.connect(self.remove_track)
+        self.pushButton_9.clicked.connect(self.return_to_first_window)
+
+        # 3 окно
+        self.pushButton_5.clicked.connect(self.to_play_music)
+
+        #4 окно
+        self.pushButton_14.clicked.connect(self.play_pause)
 
     def show_error_message(self, text_mt):
         # Создаём всплывающее окно с сообщением об ошибке
@@ -165,6 +174,11 @@ class Ui_MainWindow(object):
     def create_playlist(self):
         """Метод, вызываемый по нажатию кнопки"""
         user_input = self.get_user_input("Введите текст", "Введите название плейлиста:")
+        if user_input in [i.name for i in self.list_of_playlists]:
+            self.show_error_message('Плейлист с таким названием существует')
+            self.current_playlist = None
+            self.listWidget_3.clear()
+            return False
         if user_input:  # Если введён текст, добавляем его в список
             new_playlist = PlayList(user_input)
             self.label_2.setText(f'Плейлист: {user_input}')
@@ -174,7 +188,6 @@ class Ui_MainWindow(object):
             pass
         else:
             self.show_error_message('Нельзя создать плейлист без названия')
-
 
     def get_user_input(self, title, label):
         """Метод для открытия диалогового окна ввода текста"""
@@ -250,6 +263,72 @@ class Ui_MainWindow(object):
             self.show_error_message('Вы должны выбрать MP3 файл для добавления')
             return None
 
+    def return_to_first_window(self):
+        self.list_of_playlists.append(self.current_playlist)
+        self.current_playlist = None
+        self.listWidget.clear()
+        self.listWidget_3.clear()
+        for i in self.list_of_playlists:
+            self.listWidget.addItem(i.name)
+        self.tabWidget.setCurrentIndex(0)
+
+    def remove_playlist(self):
+        selected_item = self.listWidget.currentItem().text()
+        if selected_item:
+            for i in self.list_of_playlists:
+                if selected_item == i.name:
+                    self.list_of_playlists.remove(i)
+                    break
+            self.listWidget.clear()
+            for i in self.list_of_playlists:
+                self.listWidget.addItem(i.name)
+        else:
+            self.show_error_message('Плейлист не выбран')
+
+    def to_playlist(self):
+        selected_item = self.listWidget.currentItem()
+        if selected_item:
+            for i in self.list_of_playlists:
+                if selected_item.text() == i.name:
+                    self.current_playlist = i
+                    self.label.setText(f'Плейлист: {self.current_playlist.name}')
+                    self.tabWidget.setCurrentIndex(2)
+                    self.listWidget_2.clear()
+                    count = 0
+                    for j in self.current_playlist:
+                        count += 1
+                        self.listWidget_2.addItem(str(count) + ') ' + str(j.data))
+                    break
+        else:
+            self.show_error_message('Плейлист не выбран')
+
+    def to_play_music(self):
+        selected_item = self.listWidget_2.currentItem()
+
+        if selected_item:
+            for i in self.current_playlist:
+                if selected_item.text()[selected_item.text().index(' ') + 1:] == str(i.data):
+                    self.choiced_track = i
+                    self.tabWidget.setCurrentIndex(3)
+                    break
+
+        else:
+            self.show_error_message('Трек не выбран')
+
+    def play_pause(self):
+        """Toggle between play and pause for the current track."""
+        if self.choiced_track is None:
+            self.show_error_message("Сначала выберите трек для воспроизведения.")
+            return
+        if not pygame.mixer.get_busy():
+            self.current_playlist.play_all(self.choiced_track)
+
+        if self.current_playlist.is_paused:
+            self.current_playlist.play_all(self.current_playlist._current)  # Continue playing
+        else:
+            pygame.mixer.music.pause()  # Pause the music
+            self.current_playlist.is_paused = True
+
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -280,6 +359,7 @@ class Ui_MainWindow(object):
 
 if __name__ == "__main__":
     import sys
+
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
     ui = Ui_MainWindow(MainWindow)
