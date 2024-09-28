@@ -15,11 +15,11 @@ class MusicPlayerThread(QThread):
         pygame.mixer.music.load(track.path)
         pygame.mixer.music.play()
 
-        # Ожидание завершения трека
+        # Ожидание завершения трека, пока не будет вызван stop
         while pygame.mixer.music.get_busy():
-            self.msleep(100)  # Даем потоку спать 100 миллисекунд, чтобы не блокировать GUI
-
-        self.playlist.next_track()
+            self.msleep(100)  # Проверяем каждые 100 миллисекунд
+            if self.playlist.is_stopped:
+                break  # Останавливаем воспроизведение, если был вызван stop
 
 
 class Composition:
@@ -42,6 +42,7 @@ class PlayList(LinkedList):
         self.name = name
         self._current = None
         self.is_paused = False
+        self.is_stopped = False  # Новый флаг для остановки
         pygame.mixer.init()  # Инициализация микшера Pygame
 
     def __str__(self):
@@ -86,8 +87,10 @@ class PlayList(LinkedList):
         self._play_track(self._current)
 
     def stop(self):
-        """Остановить текущее воспроизведение."""
+        """Останавливаем текущий трек и поток."""
         pygame.mixer.music.stop()
+        self.is_stopped = True  # Устанавливаем флаг остановки
+        print("Воспроизведение остановлено.")
 
     def pause(self):
         """Поставить воспроизведение на паузу."""
@@ -104,5 +107,45 @@ class PlayList(LinkedList):
 
     def __repr__(self):
         return f"PlayList(name='{self.name}', tracks=[{', '.join(str(node.data) for node in self)})])"
+
+    def move(self, old_index, new_index):
+        """Метод для перемещения элемента с позиции `old_index` на позицию `new_index`."""
+        if not self.first_item:
+            raise IndexError("Список пуст")
+
+        length = len(self)
+
+        # Обработка отрицательных индексов
+        if old_index < 0:
+            old_index += length
+        if new_index < 0:
+            new_index += length
+
+        # Проверка допустимости индексов
+        if old_index < 0 or old_index >= length or new_index < 0 or new_index >= length:
+            raise IndexError("Индекс вне диапазона")
+
+        # Шаг 1: Найдем элемент по старой позиции (old_index)
+        current = self.first_item
+        for _ in range(old_index):
+            current = current.next_item
+
+        # Сохраняем данные для перемещаемого узла
+        data_to_move = current.data
+
+        # Шаг 2: Удалим элемент с его текущей позиции
+        self.remove(data_to_move)
+
+        # Шаг 3: Вставим элемент на новую позицию
+        if new_index == 0:
+            # Если нужно вставить на первую позицию
+            self.append_left(data_to_move)
+        else:
+            # Найдём элемент, перед которым будет вставка
+            target = self.first_item
+            for _ in range(new_index - 1):
+                target = target.next_item
+            # Вставляем новый элемент после найденного
+            self.insert(target.data, data_to_move)
 
 

@@ -155,8 +155,12 @@ class Ui_MainWindow(object):
 
         # 3 окно
         self.pushButton_5.clicked.connect(self.to_play_music)
+        self.pushButton_6.clicked.connect(self.delete_music)
+        self.pushButton_8.clicked.connect(self.add_music_to_playlist)
+        self.pushButton_7.clicked.connect(self.return_to_first_window_from_3)
+        self.pushButton_4.clicked.connect(self.replace_track)
 
-        #4 окно
+        # 4 окно
         self.pushButton_14.clicked.connect(self.play_pause)
         self.pushButton_12.clicked.connect(self.play_next_track)
         self.pushButton_13.clicked.connect(self.play_previous_track)
@@ -275,6 +279,14 @@ class Ui_MainWindow(object):
             self.listWidget.addItem(i.name)
         self.tabWidget.setCurrentIndex(0)
 
+    def return_to_first_window_from_3(self):
+        self.current_playlist = None
+        self.listWidget.clear()
+        self.listWidget_3.clear()
+        for i in self.list_of_playlists:
+            self.listWidget.addItem(i.name)
+        self.tabWidget.setCurrentIndex(0)
+
     def remove_playlist(self):
         selected_item = self.listWidget.currentItem()
         if selected_item:
@@ -311,7 +323,7 @@ class Ui_MainWindow(object):
         if selected_item:
             for i in self.current_playlist:
                 if selected_item.text()[selected_item.text().index(' ') + 1:] == str(i.data):
-                    #self.choiced_track = i
+                    # self.choiced_track = i
                     self.current_playlist._current = i
                     self.tabWidget.setCurrentIndex(3)
                     self.label_3.setText(f'Текущий трек: {str(self.current_playlist._current.data)}')
@@ -337,8 +349,77 @@ class Ui_MainWindow(object):
         self.label_3.clear()
         self.tabWidget.setCurrentIndex(2)
 
-    def add_music(self):
+    def delete_music(self):
+        selected_item = self.listWidget_2.currentItem()
 
+        if selected_item:
+            for i in self.current_playlist:
+                if selected_item.text()[selected_item.text().index(' ') + 1:] == str(i.data):
+                    self.current_playlist.remove(i.data)
+                    self.listWidget_2.clear()
+                    count = 0
+                    for j in self.current_playlist:
+                        count += 1
+                        self.listWidget_2.addItem(str(count) + ') ' + str(j.data))
+                    break
+
+        else:
+            self.show_error_message('Трек не выбран')
+
+    def add_music_to_playlist(self):
+        if self.add_to_playlist():
+            self.listWidget_2.clear()
+            count = 0
+            for j in self.current_playlist:
+                count += 1
+                self.listWidget_2.addItem(str(count) + ') ' + str(j.data))
+
+    def get_two_numbers(self, title, label1, label2):
+        """Метод для открытия диалогового окна ввода двух чисел"""
+
+        # Ввод первого числа
+        num1, ok1 = QInputDialog.getText(MainWindow, title, label1)
+        if not ok1:  # Если пользователь нажал Cancel или закрыл окно
+            return False
+
+        # Проверка, что введено число
+        try:
+            num1 = int(num1)
+        except ValueError:
+            return None  # Возвращаем None, если введено не число
+
+        # Ввод второго числа
+        num2, ok2 = QInputDialog.getText(MainWindow, title, label2)
+        if not ok2:  # Если пользователь нажал Cancel или закрыл окно
+            return False
+
+        # Проверка, что введено число
+        try:
+            num2 = int(num2)
+        except ValueError:
+            return None  # Возвращаем None, если введено не число
+
+        # Если оба числа корректно введены, возвращаем их
+        return num1, num2
+
+    def replace_track(self):
+        try:
+            num1, num2 = self.get_two_numbers('Введите число', 'Порядковый номер трека, который вы хотите переместить',
+                                              'Введите новый порядковый номер выбранного трека')
+            len_of_playlist = len(self.current_playlist)
+            if 0 < num1 <= len_of_playlist and 0 < num2 <= len_of_playlist and num1 != num2:
+                num1 -= 1
+                num2 -= 1
+                self.current_playlist.move(num1, num2)
+                self.listWidget_2.clear()
+                count = 0
+                for i in self.current_playlist:
+                    count += 1
+                    self.listWidget_2.addItem(str(count) + ') ' + str(i.data))
+            else:
+                self.show_error_message('Неверный порядковый номер')
+        except:
+            self.show_error_message('Ошибка')
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -355,13 +436,13 @@ class Ui_MainWindow(object):
         self.pushButton_5.setText(_translate("MainWindow", "Воспроизвести все"))
         self.pushButton_8.setText(_translate("MainWindow", "Добавить трек"))
         self.pushButton_6.setText(_translate("MainWindow", "Удалить трек"))
-        self.pushButton_4.setText(_translate("MainWindow", "Поменять местами"))
+        self.pushButton_4.setText(_translate("MainWindow", "Изменить позицию трека"))
         self.pushButton_7.setText(_translate("MainWindow", "Перейти к плейлистам"))
         self.label.setText(_translate("MainWindow", "Плейлист:"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("MainWindow", "Tab 3"))
         self.label_3.setText(_translate("MainWindow", "Текущий трек:"))
         self.pushButton_13.setText(_translate("MainWindow", "Предыдущий трек"))
-        self.pushButton_14.setText(_translate("MainWindow", "Воспроизведение/пауза"))
+        self.pushButton_14.setText(_translate("MainWindow", "Воспроизведение"))
         self.pushButton_12.setText(_translate("MainWindow", "Следующий трек"))
         self.pushButton_15.setText(_translate("MainWindow", "Вернуться к плейлисту"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_4), _translate("MainWindow", "Tab 4"))
