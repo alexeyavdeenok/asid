@@ -1,10 +1,10 @@
+import sys
+from interface import *
 from playlist import *
+from linked_list import *
 
-comp = Composition('1', '1')
-pl = PlayList('2')
-pl.append(comp)
-comp2 = Composition('2', '2')
-pl.append(comp2)
-pl.remove(comp)
-for i in pl:
-    print(i.data)
+app = QtWidgets.QApplication(sys.argv)
+MainWindow = QtWidgets.QMainWindow()
+ui = Ui_MainWindow(MainWindow)
+MainWindow.show()
+sys.exit(app.exec_())

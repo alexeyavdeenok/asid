@@ -20,6 +20,8 @@ class MusicPlayerThread(QThread):
             self.msleep(100)  # Проверяем каждые 100 миллисекунд
             if self.playlist.is_stopped:
                 break  # Останавливаем воспроизведение, если был вызван stop
+        if not self.playlist.is_stopped:
+            self.playlist.next_track()
 
 
 class Composition:
