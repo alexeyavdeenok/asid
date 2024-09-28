@@ -167,7 +167,12 @@ class Ui_MainWindow(object):
         self.pushButton_15.clicked.connect(self.to_choice_music)
 
     def show_error_message(self, text_mt):
-        # Создаём всплывающее окно с сообщением об ошибке
+        """
+            Показывает всплывающее сообщение с ошибкой.
+
+            Аргументы:
+                text_mt (str): Дополнительный текст, который будет отображен в окне сообщения.
+        """
         error_dialog = QMessageBox()
         error_dialog.setIcon(QMessageBox.Critical)  # Устанавливаем тип сообщения как "Ошибка"
         error_dialog.setWindowTitle('Ошибка')  # Заголовок окна
@@ -179,7 +184,15 @@ class Ui_MainWindow(object):
         error_dialog.exec_()
 
     def create_playlist(self):
-        """Метод, вызываемый по нажатию кнопки"""
+        """
+                Создает новый плейлист на основе пользовательского ввода.
+
+                Если плейлист с таким названием уже существует, показывается сообщение об ошибке.
+                Иначе создаётся новый плейлист и переключается вкладка на интерфейс работы с плейлистом.
+
+                Возвращает:
+                    bool: True если плейлист успешно создан, False если возникли ошибки.
+                """
         user_input = self.get_user_input("Введите текст", "Введите название плейлиста:")
         if user_input in [i.name for i in self.list_of_playlists]:
             self.show_error_message('Плейлист с таким названием существует')
@@ -197,7 +210,16 @@ class Ui_MainWindow(object):
             self.show_error_message('Нельзя создать плейлист без названия')
 
     def get_user_input(self, title, label):
-        """Метод для открытия диалогового окна ввода текста"""
+        """
+        Открывает диалоговое окно для ввода текста от пользователя.
+
+        Аргументы:
+            title (str): Заголовок окна диалога.
+            label (str): Текстовое сообщение с запросом для пользователя.
+
+        Возвращает:
+            str или bool: Введённый текст или False/None если ввод отменён.
+        """
         text, ok = QInputDialog.getText(MainWindow, title, label)
         if ok and text:  # Проверяем, нажал ли пользователь OK и ввёл ли текст
             return text
@@ -206,12 +228,27 @@ class Ui_MainWindow(object):
         return None  # Возвращаем None, если ввод не был осуществлён
 
     def set_listwidget3_value(self):
+        """
+        Очищает содержимое listWidget_3 и добавляет все треки текущего плейлиста.
+
+        Возвращает:
+            None
+        """
         if self.add_to_playlist():
             self.listWidget_3.clear()
             for i in self.current_playlist:
                 self.listWidget_3.addItem(str(i.data))
 
     def add_to_playlist(self):
+        """
+        Добавляет трек в текущий плейлист.
+
+        Проверяет наличие дубликатов по названию и пути.
+        Обновляет содержимое плейлиста при успешном добавлении.
+
+        Возвращает:
+            bool: True если трек успешно добавлен, False если возникли ошибки.
+        """
         try:
             name, path = self.get_composition()
             if len(self.current_playlist) > 0:
@@ -228,6 +265,14 @@ class Ui_MainWindow(object):
             self.show_error_message('Трек не добавлен')
 
     def remove_track(self):
+        """
+        Удаляет выбранный трек из текущего плейлиста.
+
+        Если трек не выбран, показывается сообщение об ошибке.
+
+        Возвращает:
+            None
+        """
         selected_item = self.listWidget_3.currentItem()
 
         if selected_item:
@@ -242,7 +287,12 @@ class Ui_MainWindow(object):
             self.show_error_message('Трек не выбран')
 
     def get_composition(self):
-        """Метод для добавления трека в плейлист."""
+        """
+        Открывает диалоговое окно для выбора MP3-файла и получения названия песни от пользователя.
+
+        Возвращает:
+            tuple или None: Название трека и путь к файлу или None в случае ошибки.
+        """
 
         # Открываем диалоговое окно для выбора файла с фильтром на mp3 файлы
         file_path, _ = QFileDialog.getOpenFileName(
@@ -271,6 +321,14 @@ class Ui_MainWindow(object):
             return None
 
     def return_to_first_window(self):
+        """
+        Возвращает интерфейс к списку плейлистов.
+
+        Очищает текущий плейлист и обновляет список всех плейлистов в listWidget.
+
+        Возвращает:
+            None
+        """
         self.list_of_playlists.append(self.current_playlist)
         self.current_playlist = None
         self.listWidget.clear()
@@ -280,6 +338,14 @@ class Ui_MainWindow(object):
         self.tabWidget.setCurrentIndex(0)
 
     def return_to_first_window_from_3(self):
+        """
+        Возвращает интерфейс к списку плейлистов (аналогично return_to_first_window).
+
+        Очищает текущий плейлист и обновляет список всех плейлистов.
+
+        Возвращает:
+            None
+        """
         self.current_playlist = None
         self.listWidget.clear()
         self.listWidget_3.clear()
@@ -288,6 +354,14 @@ class Ui_MainWindow(object):
         self.tabWidget.setCurrentIndex(0)
 
     def remove_playlist(self):
+        """
+        Удаляет выбранный плейлист из списка.
+
+        Если плейлист не выбран, показывается сообщение об ошибке.
+
+        Возвращает:
+            None
+        """
         selected_item = self.listWidget.currentItem()
         if selected_item:
             for i in self.list_of_playlists:
@@ -301,6 +375,14 @@ class Ui_MainWindow(object):
             self.show_error_message('Плейлист не выбран')
 
     def to_playlist(self):
+        """
+        Переключает интерфейс на работу с выбранным плейлистом.
+
+        Очищает содержимое listWidget_2 и добавляет треки выбранного плейлиста.
+
+        Возвращает:
+            None
+        """
         selected_item = self.listWidget.currentItem()
         if selected_item:
             for i in self.list_of_playlists:
@@ -318,6 +400,12 @@ class Ui_MainWindow(object):
             self.show_error_message('Плейлист не выбран')
 
     def to_play_music(self):
+        """
+        Переключает интерфейс на экран воспроизведения музыки и начинает воспроизведение выбранного трека.
+
+        Возвращает:
+            None
+        """
         selected_item = self.listWidget_2.currentItem()
 
         if selected_item:
@@ -334,23 +422,56 @@ class Ui_MainWindow(object):
             self.show_error_message('Трек не выбран')
 
     def play_pause(self):
-        """Toggle between play and pause for the current track."""
+        """
+        Переключает воспроизведение текущего трека между режимами воспроизведения и паузы.
+
+        Возвращает:
+            None
+        """
         self.current_playlist.play_all()
 
     def play_next_track(self):
+        """
+        Переключает воспроизведение на следующий трек в плейлисте
+        и обновляет отображаемое название текущего трека.
+
+        Возвращает:
+            None
+        """
         self.current_playlist.next_track()
         self.label_3.setText(f'Текущий трек: {str(self.current_playlist.current)}')
 
     def play_previous_track(self):
+        """
+        Переключает воспроизведение на предыдущий трек в плейлисте
+        и обновляет отображаемое название текущего трека.
+
+        Возвращает:
+            None
+        """
         self.current_playlist.previous_track()
         self.label_3.setText(f'Текущий трек: {str(self.current_playlist.current)}')
 
     def to_choice_music(self):
+        """
+        Останавливает текущее воспроизведение и возвращает интерфейс к списку треков плейлиста.
+
+        Возвращает:
+            None
+        """
         self.current_playlist.stop()
         self.label_3.clear()
         self.tabWidget.setCurrentIndex(2)
 
     def delete_music(self):
+        """
+        Удаляет выбранный трек из текущего плейлиста.
+
+        Если трек не выбран, показывается сообщение об ошибке.
+
+        Возвращает:
+            None
+        """
         selected_item = self.listWidget_2.currentItem()
 
         if selected_item:
@@ -368,6 +489,12 @@ class Ui_MainWindow(object):
             self.show_error_message('Трек не выбран')
 
     def add_music_to_playlist(self):
+        """
+        Добавляет выбранный трек в текущий плейлист и обновляет список треков.
+
+        Возвращает:
+            None
+        """
         if self.add_to_playlist():
             self.listWidget_2.clear()
             count = 0
@@ -376,7 +503,17 @@ class Ui_MainWindow(object):
                 self.listWidget_2.addItem(str(count) + ') ' + str(j.data))
 
     def get_two_numbers(self, title, label1, label2):
-        """Метод для открытия диалогового окна ввода двух чисел"""
+        """
+        Открывает диалоговое окно для получения двух числовых значений от пользователя.
+
+        Аргументы:
+            title (str): Заголовок окна.
+            label1 (str): Текст запроса для первого числа.
+            label2 (str): Текст запроса для второго числа.
+
+        Возвращает:
+            tuple или None: Кортеж из двух чисел или None/False в случае ошибки.
+        """
 
         # Ввод первого числа
         num1, ok1 = QInputDialog.getText(MainWindow, title, label1)
@@ -404,6 +541,15 @@ class Ui_MainWindow(object):
         return num1, num2
 
     def replace_track(self):
+        """
+        Перемещает трек в плейлисте с одной позиции на другую.
+
+        Запрашивает два числа: текущее и новое положение трека.
+        Если ввод корректен, трек перемещается.
+
+        Возвращает:
+            None
+        """
         try:
             num1, num2 = self.get_two_numbers('Введите число', 'Порядковый номер трека, который вы хотите переместить',
                                               'Введите новый порядковый номер выбранного трека')
